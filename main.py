@@ -8,9 +8,12 @@ password = "password"
 # Coordinate del dipartimento di ingegneria di Modena
 lat = 44.6293839463985
 lon = 10.948827844203144
+# Coordinate Largo Garibaldi Modena
+lat = 44.64374610736016
+lon = 10.93231058316037
 
 # Nome della fermata di arrivo
-dest = "D'AVIA"
+dest = "GOTTARDI"
 
 # Connessione al database Neo4j
 driver = GraphDatabase.driver(uri, auth=(username, password))
