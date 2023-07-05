@@ -10,7 +10,7 @@ lat = 44.6293839463985
 lon = 10.948827844203144
 
 # Nome della fermata di arrivo
-dest = "GARIBALDI"
+dest = "D'AVIA"
 
 # Connessione al database Neo4j
 driver = GraphDatabase.driver(uri, auth=(username, password))
@@ -30,18 +30,31 @@ with driver.session() as session:
     # Ottieni l'orario attuale
     now = datetime.now()
     formatted_time = now.strftime('%H:%M:%S')
+    paths = None
 
     # Calcola il percorso per raggiungere la fermata desiderata
     query = """MATCH p=(s:Stop {name:$name})-[:LOCATED_AT]-(s1:Stoptime)-[:PART_OF_TRIP]-(t1:Trip)-[:USES]-(:Route)-[:USES]-(t2:Trip)-[:PART_OF_TRIP]-(s2:Stoptime)-[:LOCATED_AT]-(f:Stop {name:$dest})
-            WHERE s1.departure_time >= $formatted_time AND s1.departure_time < s2.arrival_time RETURN p LIMIT 1"""
+            WHERE $formatted_time <= s1.departure_time < s2.arrival_time
+            RETURN p"""
     result = session.run(query, name=name, formatted_time=formatted_time, dest=dest)
 
     for record in result:
-        path = record["p"]
-    
+        paths = record["p"]
+
+    # Prova con una fermata intermedia
+    if paths == None:
+        query2 = """MATCH (s:Stop {name:$name}), (f:Stop {name:$dest})
+                MATCH p=(s)-[:LOCATED_AT]-(s1:Stoptime)-[:PART_OF_TRIP]-(:Trip)-[:PART_OF_TRIP]-(s2:Stoptime)-[:LOCATED_AT]-(:Stop)-[:LOCATED_AT]-(s3:Stoptime)-[:PART_OF_TRIP]-(:Trip)-[:PART_OF_TRIP]-(s4:Stoptime)-[:LOCATED_AT]-(f)
+                WHERE $formatted_time <= s1.departure_time < s2.arrival_time < s3.departure_time < s4.arrival_time 
+                RETURN p ORDER BY s1.departure_time ASC, s3.departure_time ASC LIMIT 1
+            """
+        result = session.run(query2, name=name, formatted_time=formatted_time, dest=dest)
+    for record in result:
+        paths = record["p"]
+
     # Iterazione attraverso i nodi e le relazioni all'interno del percorso
     i = 'Partenza'
-    for node in path.nodes:
+    for node in paths.nodes:
         if node["name"] != None:
             print(f"Fermata di {i}:", node["name"])
         elif node["short_name"] != None:
