@@ -12,8 +12,8 @@ lon = 10.948827844203144
 lat = 44.64374610736016
 lon = 10.93231058316037
 
-# Nome della fermata di arrivo
-dest = "GOTTARDI"
+# Nome della fermata di arrivo FINZI, D'AVIA, POLO LEONARDO, GALILEI
+dest = "FINZI"
 
 # Connessione al database Neo4j
 driver = GraphDatabase.driver(uri, auth=(username, password))
@@ -36,9 +36,10 @@ with driver.session() as session:
     paths = None
 
     # Calcola il percorso per raggiungere la fermata desiderata
-    query = """MATCH p=(s:Stop {name:$name})-[:LOCATED_AT]-(s1:Stoptime)-[:PART_OF_TRIP]-(t1:Trip)-[:USES]-(:Route)-[:USES]-(t2:Trip)-[:PART_OF_TRIP]-(s2:Stoptime)-[:LOCATED_AT]-(f:Stop {name:$dest})
-            WHERE $formatted_time <= s1.departure_time < s2.arrival_time
-            RETURN p"""
+    query = """MATCH (s:Stop {name:$name}), (f:Stop {name:$dest})
+            MATCH p=(s)-[:LOCATED_AT]-(s1:Stoptime)-[:PART_OF_TRIP]-(:Trip)-[:PART_OF_TRIP]-(s2:Stoptime)-[:LOCATED_AT]-(f) 
+            WHERE $formatted_time <= s1.departure_time < s2.arrival_time 
+            RETURN p ORDER BY s1.departure_time ASC LIMIT 1"""
     result = session.run(query, name=name, formatted_time=formatted_time, dest=dest)
 
     for record in result:
@@ -60,6 +61,7 @@ with driver.session() as session:
     for node in paths.nodes:
         if node["name"] != None:
             print(f"Fermata di {i}:", node["name"])
+            i = 'Partenza'
         elif node["short_name"] != None:
             print("Tratta Autobus:", node["short_name"])
         elif node["departure_time"] != None:
