@@ -1,8 +1,9 @@
 # script per modificare il file calendar_dates.txt
 
-input_file = 'GTFS_230406_240405/calendar_dates.txt'
-trip_file = 'GTFS_230406_240405/trips.txt'
-output_file = 'new_calendar_dates.txt'
+path_to_GTFS = 'GTFS_230406_240405/'
+input_file = path_to_GTFS + 'calendar_dates.txt'
+trip_file = path_to_GTFS + 'trips.txt'
+output_file = path_to_GTFS + 'new_calendar_dates.txt'
 header = 'service_id,day,exception_type'
 
 with open(trip_file, 'r') as trips:
